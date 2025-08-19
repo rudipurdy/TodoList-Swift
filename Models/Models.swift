@@ -12,7 +12,15 @@ struct Todo: Codable {
     let completed: Bool
     
     func toTask() -> Task {
-        Task(id: id, title: todo, isCompleted: completed)
+        let task = Task(
+            id: id,
+            title: todo,
+            isCompleted: completed,
+            description: nil,
+            createdAt: Date()
+        )
+        print("Converted Todo to Task: \(task)")
+        return task
     }
 }
 

@@ -5,10 +5,36 @@ struct TaskRow: View {
     let onToggle: () -> Void
     let onDelete: () -> Void
     let onEdit: () -> Void
+    let isSelected: Bool // Новый параметр
+    let onSelect: (() -> Void)? // Обработчик выделения
+    
+    init(task: Task,
+         onToggle: @escaping () -> Void,
+         onDelete: @escaping () -> Void,
+         onEdit: @escaping () -> Void,
+         isSelected: Bool = false,
+         onSelect: (() -> Void)? = nil) {
+        self.task = task
+        self.onToggle = onToggle
+        self.onDelete = onDelete
+        self.onEdit = onEdit
+        self.isSelected = isSelected
+        self.onSelect = onSelect
+    }
     
     var body: some View {
         HStack(spacing: 16) {
-            // Чекбокс
+            // Кружок выделения (если включен режим выбора)
+            if onSelect != nil {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .foregroundColor(isSelected ? .blue : .gray)
+                    .font(.system(size: 20))
+                    .onTapGesture {
+                        onSelect?()
+                    }
+            }
+            
+            // Чекбокс выполнения
             ZStack {
                 Circle()
                     .stroke(task.isCompleted ? Color.green : Color.gray, lineWidth: 2)
@@ -19,6 +45,9 @@ struct TaskRow: View {
                         .font(.system(size: 12, weight: .bold))
                         .foregroundColor(.green)
                 }
+            }
+            .onTapGesture {
+                onToggle()
             }
             
             // Текст задачи
@@ -40,11 +69,13 @@ struct TaskRow: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity)
-        .background(Color(.systemBackground))
+        .background(isSelected ? Color.blue.opacity(0.1) : Color(.systemBackground))
         .cornerRadius(10)
-        .contentShape(Rectangle()) // Важно для распознавания тапа по всей области
+        .contentShape(Rectangle())
         .onTapGesture {
-            onToggle()
+            if onSelect == nil {
+                onToggle()
+            }
         }
         .contextMenu {
             Button(action: onEdit) {
@@ -54,14 +85,12 @@ struct TaskRow: View {
                 Label("Удалить", systemImage: "trash")
             }
         }
-        // Удаление по свайпу влево (более заметный вариант)
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             Button(role: .destructive, action: onDelete) {
                 Label("Удалить", systemImage: "trash.fill")
             }
             .tint(.red)
         }
-        // Редактирование по свайпу вправо
         .swipeActions(edge: .leading, allowsFullSwipe: false) {
             Button(action: onEdit) {
                 Label("Редактировать", systemImage: "pencil")

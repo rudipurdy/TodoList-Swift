@@ -17,6 +17,8 @@ final class TodoService: TodoServiceProtocol {
             return
         }
         
+        print("Fetching todos from: \(url)")
+        
         let task = urlSession.dataTask(with: url) { [weak self] data, response, error in
             if let error = error {
                 completion(.failure(error))
@@ -35,15 +37,18 @@ final class TodoService: TodoServiceProtocol {
             }
             
             do {
-                let response = try self?.jsonDecoder.decode(TodosResponse.self, from: data)
-                if let todos = response?.todos {
-                    completion(.success(todos))
-                } else {
-                    completion(.failure(NetworkError.decodingError))
-                }
-            } catch {
-                completion(.failure(error))
-            }
+                        let response = try self?.jsonDecoder.decode(TodosResponse.self, from: data)
+                        if let todos = response?.todos {
+                            print("Received \(todos.count) todos from API")
+                            print("First 3 todos: \(todos.prefix(3))")
+                            completion(.success(todos))
+                        } else {
+                            completion(.failure(NetworkError.decodingError))
+                        }
+                    } catch {
+                        print("Decoding error: \(error)")
+                        completion(.failure(error))
+                    }
         }
         
         task.resume()
